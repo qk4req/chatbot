@@ -31,40 +31,26 @@ passport.use(new TwitchStrategy({
 		);
 		const apiClient = new ApiClient({authProvider});
 		const chatClient = new ChatClient(authProvider, {channels: ['qk4req']});
-		chatClient.onConnect(function() {
-			chatClient.onMessage((channel, user, message, data) => {
-				var command = message.trim();
+		
 
-				if (command.indexOf('!') === 0) {
-					if (command.indexOf(' ') !== -1) {
-						var name = command.substr(1, (command.indexOf(' ')-1)).toLowerCase(),
-						args = matchAll(command.substr((command.indexOf(' ')+1), command.length), /[\'\"]{1}([^\'\"]+)[\'\"]{1}|([^\'\s]+)/gm).toArray();
-					}
-					else {
-						var name = command.substr(1, command.length),
-						args = [];
-					}
-					Reflect.apply(proxy[name], undefined, [new Chat(args, channel, user, data)]);
-				};
-			});
-		})
-		await chatClient.connect();
 
-		function Chat(args, channel, user, data) {
+
+
+		function Chat(args, /*channel, user, */data) {
 			this.args = args;
-			this.channel = channel;
-			this.user = user;
+			//this.channel = channel;
+			//this.user = user;
 			this.data = data;
 		}
 
-		Chat.prototype.message = function(text, ...params) {
-			chatClient.say(this.channel, vsprintf(text, params));
+		Chat.message = function(text, ...params) {
+			chatClient.say(twitch.user.name, vsprintf(text, params));
 		};
-		Chat.prototype.randomMessage = function(messages, ...params) {
-			chatClient.say(this.channel, vsprintf(messages[Math.floor(Math.random() * messages.length)], params));
+		Chat.randomMessage = function(messages, ...params) {
+			chatClient.say(twitch.user.name, vsprintf(messages[Math.floor(Math.random() * messages.length)], params));
 		};
 		Chat.prototype.errorMessage = function() {
-			this.randomMessage(
+			Chat.randomMessage(
 				[
 					'/me @%s, я не буду твоим рабом, иди накцуй!',
 					'/me @%s, слышь чё, падашел сюда!',
@@ -83,6 +69,35 @@ passport.use(new TwitchStrategy({
 				this.args = this.args.concat(args);
 			}
 		};
+		chatClient.onConnect(function() {
+			setInterval(function(){
+				Chat.randomMessage(
+					[
+						'/me ТУТ СИСЬКИ → → → vk.com/udm_tv',
+						'/me МАМКА СОБЛАЗНИЛА СЫНОЧКА, ПРОВЕРЯЙ → → → vk.com/udm_tv',
+						'/me ОТЕЦ НАКАЗАЛ ПРИЕМНУЮ ДОЧЬ → → → vk.com/udm_tv',
+						'/me ПОРНО БЕЗ СМС И РЕГИСТРАЦИИ → → → vk.com/udm_tv'
+					]
+				);
+			}, 150000);
+
+			chatClient.onMessage((channel, user, message, data) => {
+				var command = message.trim();
+
+				if (command.indexOf('!') === 0) {
+					if (command.indexOf(' ') !== -1) {
+						var name = command.substr(1, (command.indexOf(' ')-1)).toLowerCase(),
+						args = matchAll(command.substr((command.indexOf(' ')+1), command.length), /[\'\"]{1}([^\'\"]+)[\'\"]{1}|([^\'\s]+)/gm).toArray();
+					}
+					else {
+						var name = command.substr(1, command.length),
+						args = [];
+					}
+					Reflect.apply(proxy[name], undefined, [new Chat(args, /*channel, user, */data)]);
+				};
+			});
+		})
+		await chatClient.connect();
 
 		var commands = {
 			aliases: {
@@ -101,7 +116,7 @@ passport.use(new TwitchStrategy({
 				if (!name || vk.concat(fb).concat(tw).concat(i).indexOf(name)==-1) chat.errorMessage();
 				else {
 					if (vk.indexOf(name) != -1) {
-						chat.message('/me Держи @%s → → → vk.com/qk4req', chat.user);
+						chat.message('/me Держи @%s → → → vk.com/udm_tv', chat.user);
 					} else if (i.indexOf(name) != -1) {
 						chat.message('/me Держи @%s → → → instagram.com/qk4req', chat.user);
 					} else if (fb.indexOf(name) != -1) {

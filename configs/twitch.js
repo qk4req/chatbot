@@ -5,10 +5,10 @@ class Twitch {
 						id: 419357906,
 						name: 'qk4req'
 					},
-					clientId: '9m5avw04fjx52da0z9hwzbiothlthp',
-					clientSecret: 'rcxmpuk967o3bdwk0f2hc1l0v3cnbv',
-					redirectUri: 'http://localhost:3333/twitch',
-					scope: 'user_read user:read:email channel_subscriptions chat:read chat:edit'//
+					clientId: 'mhaz8pzuw6blpsfhv1sf9e2464ybno',
+					clientSecret: 'hzyfwsw8q0l4qceeq8wpawb51esr4v',
+					redirectUri: 'http://localhost:6699/twitch',
+					scope: 'user_read channel_read channel_editor channel_subscriptions user:read:email user:edit:broadcast channel:read:subscriptions channel:manage:broadcast chat:read chat:edit'//
 			});
 	}
 }

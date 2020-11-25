@@ -30,7 +30,7 @@ passport.use(new TwitchStrategy({
 			}
 		);
 		const apiClient = new ApiClient({authProvider});
-		const chatClient = new ChatClient(authProvider, {channels: ['qk4req']});
+		const chatClient = new ChatClient(authProvider, {channels: [twitch.user.name]});
 		
 
 
@@ -116,13 +116,13 @@ passport.use(new TwitchStrategy({
 				if (!name || vk.concat(fb).concat(tw).concat(i).indexOf(name)==-1) chat.errorMessage();
 				else {
 					if (vk.indexOf(name) != -1) {
-						chat.message('/me Держи @%s → → → vk.com/udm_tv', chat.user);
+						Chat.message('/me Держи @%s → → → vk.com/udm_tv', chat.data.userInfo.displayName);
 					} else if (i.indexOf(name) != -1) {
-						chat.message('/me Держи @%s → → → instagram.com/qk4req', chat.user);
+						Chat.message('/me Держи @%s → → → instagram.com/qk4req', chat.data.userInfo.displayName);
 					} else if (fb.indexOf(name) != -1) {
-						chat.message('/me Накцуй эту Иблокнигу!');
+						Chat.message('/me Накцуй эту Иблокнигу!');
 					} else if (tw.indexOf(name) != -1) {
-						chat.message('/me Я не птица! Ко-ко-ко...');
+						Chat.message('/me Я не птица! Ко-ко-ко...');
 					}
 				}
 			},
@@ -153,7 +153,7 @@ passport.use(new TwitchStrategy({
 						], s
 					);
 				} else {
-					chat.message('/me СВЯТЕЙШИЙ ушел на небеси к праотцам!');
+					Chat.message('/me СВЯТЕЙШИЙ ушел на небеси к праотцам!');
 				}
 			},
 			top: async function(chat) {
@@ -188,7 +188,7 @@ passport.use(new TwitchStrategy({
 									`/me TOP-${rows.length} ДОНАТОРОВ ЗА ${(['D', 'DAY'].includes(period) ? 'ЭТОТ ДЕНЬ' : (['W', 'WEEK'].includes(period) ? 'ЭТУ НЕДЕЛЮ' : (['M', 'MONTH'].includes(period) ? 'ЭТОТ МЕСЯЦ' : 'ВСЕ ВРЕМЯ')))}:`
 								]);
 								rows.forEach(function(item, i) {
-									chat.message('/me %s %s - %f₽', symbols[i], item['from'], item['total']);
+									Chat.message('/me %s %s - %f₽', symbols[i], item['from'], item['total']);
 								});
 							}
 					})

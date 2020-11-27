@@ -246,16 +246,18 @@ passport.use(new TwitchStrategy({
 				console.log('Connected!');
 			},
 			join: function() {
-				if (tId === undefined && chatClient !== undefined && chatClient.isConnected) {
+				if (tId === undefined) {
 					tId = setInterval(function() {
-						Chat.randomMessage(
-							[
-								'/me ТУТ СИСЬКИ → → → vk.com/udm_tv',
-								'/me МАМКА СОБЛАЗНИЛА СЫНОЧКА, ПРОВЕРЯЙ → → → vk.com/udm_tv',
-								'/me ОТЕЦ НАКАЗАЛ ПРИЕМНУЮ ДОЧЬ → → → vk.com/udm_tv',
-								'/me ПОРНО БЕЗ СМС И РЕГИСТРАЦИИ → → → vk.com/udm_tv'
-							]
-						);
+						if (chatClient !== undefined && chatClient.isConnected) {
+							Chat.randomMessage(
+								[
+									'/me ТУТ СИСЬКИ → → → vk.com/udm_tv',
+									'/me МАМКА СОБЛАЗНИЛА СЫНОЧКА, ПРОВЕРЯЙ → → → vk.com/udm_tv',
+									'/me ОТЕЦ НАКАЗАЛ ПРИЕМНУЮ ДОЧЬ → → → vk.com/udm_tv',
+									'/me ПОРНО БЕЗ СМС И РЕГИСТРАЦИИ → → → vk.com/udm_tv'
+								]
+							);
+						}
 					}, 150000);
 				}
 			},

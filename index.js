@@ -13,6 +13,7 @@ const plural = require('plural-ru');
 
 const twitch = require('./configs/twitch');
 const db = require('./libraries/db');
+var chatClient = undefined, tId = undefined;
 
 passport.use(new TwitchStrategy({
 		clientID: twitch.clientId,
@@ -21,7 +22,6 @@ passport.use(new TwitchStrategy({
 		scope: twitch.scope
 	},
 	async function(accessToken, refreshToken) {
-		console.log('Connected to Twitch!');
 		const authProvider = new RefreshableAuthProvider(
 			new StaticAuthProvider(twitch.clientId, accessToken),
 			{
@@ -30,9 +30,6 @@ passport.use(new TwitchStrategy({
 			}
 		);
 		const apiClient = new ApiClient({authProvider});
-		const chatClient = new ChatClient(authProvider, {channels: [twitch.user.name]});
-		
-
 
 
 
@@ -42,7 +39,6 @@ passport.use(new TwitchStrategy({
 			//this.user = user;
 			this.data = data;
 		}
-
 		Chat.message = function(text, ...params) {
 			chatClient.say(twitch.user.name, vsprintf(text, params));
 		};
@@ -56,7 +52,7 @@ passport.use(new TwitchStrategy({
 					'/me @%s, слышь чё, падашел сюда!',
 					'/me @%s, чи или не чи?',
 					'/me @%s, оба-ёба?',
-					'/me @%s, А чё проблемы? Нет? Ща будут...',
+					'/me @%s, а чё проблемы? Нет? Ща будут...',
 					'/me @%s, еблет закрой!'
 				],
 				this.data.userInfo.displayName
@@ -69,35 +65,7 @@ passport.use(new TwitchStrategy({
 				this.args = this.args.concat(args);
 			}
 		};
-		chatClient.onConnect(function() {
-			setInterval(function(){
-				Chat.randomMessage(
-					[
-						'/me ТУТ СИСЬКИ → → → vk.com/udm_tv',
-						'/me МАМКА СОБЛАЗНИЛА СЫНОЧКА, ПРОВЕРЯЙ → → → vk.com/udm_tv',
-						'/me ОТЕЦ НАКАЗАЛ ПРИЕМНУЮ ДОЧЬ → → → vk.com/udm_tv',
-						'/me ПОРНО БЕЗ СМС И РЕГИСТРАЦИИ → → → vk.com/udm_tv'
-					]
-				);
-			}, 150000);
 
-			chatClient.onMessage((channel, user, message, data) => {
-				var command = message.trim();
-
-				if (command.indexOf('!') === 0) {
-					if (command.indexOf(' ') !== -1) {
-						var name = command.substr(1, (command.indexOf(' ')-1)).toLowerCase(),
-						args = matchAll(command.substr((command.indexOf(' ')+1), command.length), /[\'\"]{1}([^\'\"]+)[\'\"]{1}|([^\'\s]+)/gm).toArray();
-					}
-					else {
-						var name = command.substr(1, command.length),
-						args = [];
-					}
-					Reflect.apply(proxy[name], undefined, [new Chat(args, /*channel, user, */data)]);
-				};
-			});
-		})
-		await chatClient.connect();
 
 		var commands = {
 			aliases: {
@@ -131,20 +99,20 @@ passport.use(new TwitchStrategy({
 
 				if (stream !== undefined && stream !== null && stream.startDate) {
 					var c = countdown(moment(stream.startDate), moment()), s = '';
-		
+			
 					if (c.hours !== 0) {
 						s += (c.hours + plural(c.hours, ' час', ' часа', ' часов')) + ' ';
 					}
-		
+			
 					if (c.minutes !== 0) {
 						s += (c.minutes + plural(c.minutes, ' минуту', ' минуты', ' минут')) + ' ';
 					}
-		
+			
 					if (c.seconds !== 0) {
 						s += (c.seconds + plural(c.seconds, ' секунду', ' секунды', ' секунд'));
 					}
 		
-					chat.randomMessage(
+					Chat.randomMessage(
 						[
 							'/me Зомбоящик уже работает: %s',
 							'/me СВЯТЕЙШИЙ держит вкурсе событий уже: %s',
@@ -176,7 +144,7 @@ passport.use(new TwitchStrategy({
 					db.execute("SELECT d.`from`, SUM(d.amount) AS total FROM donations AS d WHERE (created_at >= ? AND created_at <= ?) GROUP BY d.`from` ORDER BY total DESC LIMIT 3;", periods[period])
 					.then(([rows,fields]) => {
 							if (rows.length === 0) {
-								chat.randomMessage([
+								Chat.randomMessage([
 									'/me Никто не принес, поэтому донатеров нет...',
 									'/me Cтримлер в данный момент живет на воде и сухарях...'
 								]);
@@ -184,7 +152,7 @@ passport.use(new TwitchStrategy({
 								const symbols = [
 									'①', '②', '③'
 								];
-								chat.randomMessage([
+								Chat.randomMessage([
 									`/me TOP-${rows.length} ДОНАТОРОВ ЗА ${(['D', 'DAY'].includes(period) ? 'ЭТОТ ДЕНЬ' : (['W', 'WEEK'].includes(period) ? 'ЭТУ НЕДЕЛЮ' : (['M', 'MONTH'].includes(period) ? 'ЭТОТ МЕСЯЦ' : 'ВСЕ ВРЕМЯ')))}:`
 								]);
 								rows.forEach(function(item, i) {
@@ -214,7 +182,7 @@ passport.use(new TwitchStrategy({
 						status: newTitle
 					});
 					if (channel === undefined || channel === null)
-						chat.randomMessage([
+						Chat.randomMessage([
 							'/me Название прно-фильмчика переименовано на: \"%s\"'
 						], newTitle);
 				}
@@ -230,7 +198,7 @@ passport.use(new TwitchStrategy({
 								game: category.name
 							});
 							if (channel === undefined || channel === null)
-								chat.randomMessage([
+								Chat.randomMessage([
 									'/me Категория проморолика изменена на: \"%s\"'
 								], category.name);
 						} else chat.errorMessage();
@@ -271,6 +239,70 @@ passport.use(new TwitchStrategy({
 				}
 			}
 		});
+
+
+		var listeners = {
+			connect: function() {
+				console.log('Connected!');
+			},
+			join: function() {
+				if (tId === undefined && chatClient !== undefined && chatClient.isConnected) {
+					tId = setInterval(function() {
+						Chat.randomMessage(
+							[
+								'/me ТУТ СИСЬКИ → → → vk.com/udm_tv',
+								'/me МАМКА СОБЛАЗНИЛА СЫНОЧКА, ПРОВЕРЯЙ → → → vk.com/udm_tv',
+								'/me ОТЕЦ НАКАЗАЛ ПРИЕМНУЮ ДОЧЬ → → → vk.com/udm_tv',
+								'/me ПОРНО БЕЗ СМС И РЕГИСТРАЦИИ → → → vk.com/udm_tv'
+							]
+						);
+					}, 150000);
+				}
+			},
+			message: function(channel, user, message, data) {
+				var command = message.trim();
+
+				if (command.indexOf('!') === 0) {
+					if (command.indexOf(' ') !== -1) {
+						var name = command.substr(1, (command.indexOf(' ')-1)).toLowerCase(),
+						args = matchAll(command.substr((command.indexOf(' ')+1), command.length), /[\'\"]{1}([^\'\"]+)[\'\"]{1}|([^\'\s]+)/gm).toArray();
+					}
+					else {
+						var name = command.substr(1, command.length),
+						args = [];
+					}
+					Reflect.apply(proxy[name], undefined, [new Chat(args, /*channel, user, */data)]);
+				};
+			},
+			disconnect: function(e) {
+				console.log('Disconnected!');
+			}
+		}
+		if (chatClient === undefined) {
+			console.log('Connecting to Twitch chat...');
+			chatClient = new ChatClient(authProvider, {channels: [twitch.user.name]});
+			chatClient.onConnect(listeners.connect);
+			chatClient.onJoin(listeners.join);
+			chatClient.onMessage(listeners.message);
+			chatClient.onDisconnect(listeners.disconnect);
+			await chatClient.connect();
+		} else {
+			console.log('Reconnecting to Twitch chat...');
+			/*if (chatClient.isConnected) chatClient._connection.disconnect().then(function() {
+				chatClient.removeListener(onConnect);
+				chatClient.removeListener(onDisconnect);
+				chatClient.connect();
+			}); else chatClient.connect();*/
+			if (!chatClient.isConnected) chatClient.connect();
+			else {
+				chatClient._connection.disconnect().then(async function() {
+					//chatClient = new ChatClient(authProvider, {channels: [twitch.user.name]});
+					//chatClient.onConnect(onConnect);
+					//chatClient.onDisconnect(onDisconnect);
+					await chatClient.connect();
+				});
+			}
+		}
 	}
 ));
 
